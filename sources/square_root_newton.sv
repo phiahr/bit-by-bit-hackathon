@@ -34,7 +34,7 @@ reg [63:0] in_val;
           in_val[63:32] <= in;
           $display("In value:");
           $display(in);
-          out <= (in >> 2) + 1;
+          out <= 500;
           AVAILABLE <= 1'b0;
         end 
       end
@@ -43,7 +43,7 @@ reg [63:0] in_val;
         $display("outval init:");
         $display(out);
         
-        if (cntr > 11) begin
+        if (cntr > 14) begin
           $display("S2 - counter > 5");
           s2 <= 1'b0;
           s3 <= 1'b1;
