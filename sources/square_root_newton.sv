@@ -48,6 +48,7 @@ reg [31:0] in_val;
           s2 <= 1'b0;
           s3 <= 1'b1;
           DONE <= 1'b1;
+          cntr <=  4'b0;
         end else begin
           $display("S2 - calcs result:");
           out <= (out + (in/out)) >> 1;
