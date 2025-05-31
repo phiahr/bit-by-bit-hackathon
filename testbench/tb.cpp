@@ -15,7 +15,7 @@
 #define NUM_VECTORS 1000
 #define MAX_NUM_BEATS 64
 // #define FLOAT
-// #define FIXED 22
+#define FIXED 8
 
 vluint64_t main_time = 0;
 double sc_time_stamp() { return main_time; }
