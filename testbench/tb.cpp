@@ -106,6 +106,7 @@ int main(int argc, char** argv) {
             std::cout << "Using fixed-point representation with " << FIXED << " fractional bits." << std::endl;
         #else
             double received = int_to_float(dut->io_out_tdata);
+            std::cout << dut->io_out_tdata << std::endl;
             std::cout << "Using floating-point representation." << std::endl;
         #endif
 
