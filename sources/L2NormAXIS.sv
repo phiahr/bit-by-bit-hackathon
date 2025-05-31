@@ -15,16 +15,6 @@ module L2NormAXIS(
   output        io_out_tlast
 );
 
-  // Internal accumulator for sum of input elements
-  // reg signed [31:0] accumulator;
-  // integer i;
-  // reg signed [7:0] element [7:0];
-  //   reg signed [15:0] sum_elements;
-
-
-   // Signal to reset the accumulator at end of vector
-  // wire reset_accum = io_in_tvalid && io_in_tready && io_in_tlast;
-
 
   wire [127:0] squared_input_data;
   // Accumulator output wire
@@ -42,6 +32,22 @@ module L2NormAXIS(
     .sum_out(accumulator_sum)
   );
 
+
+
+// Square setup
+reg [31:0] result_buffer;
+  reg START_SQ;
+  wire DONE_SQ;
+  wire AVAILABLE_SQ;
+  square_root_newton sq1(
+    .clk(clock),
+    .rstn(reset),
+    .in(accumulator[31:0]),
+    .out(result_buffer),
+    .START(START_SQ),
+    .DONE(DONE_SQ),
+    .AVAILABLE(AVAILABLE_SQ)
+  );
   // Replace this loop back with the actual logic for L2 norm calculation
   // ------------------------------------------------------------------------
   // ------------------------------------------------------------------------
@@ -59,9 +65,18 @@ module L2NormAXIS(
 
       if (io_in_tvalid && io_in_tready && io_in_tlast) begin
         result_data <= accumulator + accumulator_sum; // Use the accumulator as the result
-        result_valid <= 1'b1;
-        accumulator <= 32'h0; // Reset the accumulator
+        START_SQ <= 1'b1;
+
+
       end
+      if(DONE_SQ & START_SQ) begin
+      $display("COMPUTE DONE Main loop send data");
+        result_data <= result_buffer << 8;
+        accumulator <= 32'h0;
+        START_SQ <= 1'b0;
+        result_valid <= 1'b1;
+      end 
+
       else if (io_out_tready && io_out_tvalid) begin
         result_valid <= 1'b0; // Clear valid when output is ready
       end
