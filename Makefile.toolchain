@@ -1,0 +1,82 @@
+.ONESHELL:
+.SHELLFLAGS := -e -c
+
+BUILD_DIR ?= build-toolchain
+BUILD_DIR_ABSPATH := $(abspath $(BUILD_DIR))
+
+VERILATOR_VERSION := 8ff77e9d47351b0a59114929880687839a51840b
+YOSYS_VERSION := d96d1e36302e2bdc5028d601bb06dbcf0c9e4f43
+
+.PHONY: all
+all: verilator-install env-script
+
+.PHONY: builddir
+builddir:
+	mkdir -p $(BUILD_DIR)
+
+.PHONY: verilator
+verilator: builddir
+	@if [ -d $(BUILD_DIR)/verilator ]; then \
+	  git -C $(BUILD_DIR)/verilator fetch; \
+	else \
+	  git -C $(BUILD_DIR) clone https://github.com/verilator/verilator; \
+	fi
+	git -C $(BUILD_DIR)/verilator checkout $(VERILATOR_VERSION)
+	cd $(BUILD_DIR_ABSPATH)/verilator && autoconf
+	cd $(BUILD_DIR_ABSPATH)/verilator && ./configure --prefix=$(BUILD_DIR_ABSPATH)/verilator-install
+	$(MAKE) -j$(shell nproc) -C $(BUILD_DIR_ABSPATH)/verilator
+
+.PHONY: verilator-install
+verilator-install: verilator
+	$(MAKE) -C $(BUILD_DIR_ABSPATH)/verilator install
+
+.PHONY: clean-verilator
+clean-verilator:
+	$(MAKE) -C $(BUILD_DIR_ABSPATH)/verilator clean
+
+.PHONY: yosys
+yosys: builddir
+	@if [ -d $(BUILD_DIR)/yosys ]; then \
+	  git -C $(BUILD_DIR)/yosys fetch; \
+	else \
+	  git -C $(BUILD_DIR) clone --recurse-submodules https://github.com/YosysHQ/yosys.git; \
+	fi
+	git -C $(BUILD_DIR)/yosys checkout $(YOSYS_VERSION)
+	mkdir -p $(BUILD_DIR_ABSPATH)/yosys-build
+	$(MAKE) -j$(shell nproc) -C $(BUILD_DIR_ABSPATH)/yosys-build -f $(BUILD_DIR_ABSPATH)/yosys/Makefile PREFIX=$(BUILD_DIR_ABSPATH)/yosys-install
+
+.PHONY: yosys-install
+yosys-install: yosys
+	$(MAKE) -C $(BUILD_DIR_ABSPATH)/yosys-build -f $(BUILD_DIR_ABSPATH)/yosys/Makefile install PREFIX=$(BUILD_DIR_ABSPATH)/yosys-install
+
+.PHONY: clean-yosys
+clean-yosys:
+	$(MAKE) -C $(BUILD_DIR_ABSPATH)/yosys clean
+
+.PHONY: netlistsvg-install
+netlistsvg-install:
+	@if ! command -v npm > /dev/null; then \
+		echo "ERROR: npm not found, please install Node.js and npm"; \
+		exit 1; \
+	fi
+	mkdir -p $(BUILD_DIR_ABSPATH)/netlistsvg
+	npm install -g netlistsvg --prefix $(BUILD_DIR_ABSPATH)/netlistsvg
+
+.PHONY: env-script
+env-script:
+	cat > $(BUILD_DIR)/env.sh<< EOF
+	(return 0 2>/dev/null) || echo "ERROR: this file must be sourced" || exit 1
+	if [ -d $(BUILD_DIR_ABSPATH)/verilator-install ]; then
+		export PATH="$(BUILD_DIR_ABSPATH)/verilator-install/bin:\$$PATH"
+	fi
+	if [ -d $(BUILD_DIR_ABSPATH)/yosys-install ]; then
+		export PATH="$(BUILD_DIR_ABSPATH)/yosys-install/bin:\$$PATH"
+	fi
+	if [ -d $(BUILD_DIR_ABSPATH)/netlistsvg/bin ]; then
+		export PATH="$(BUILD_DIR_ABSPATH)/netlistsvg/bin:\$$PATH"
+	fi
+	EOF
+
+.PHONY: clean-env-script
+clean-env-script:
+	rm $(BUILD_DIR)/env.sh
