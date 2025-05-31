@@ -15,6 +15,33 @@ module L2NormAXIS(
   output        io_out_tlast
 );
 
+  // Internal accumulator for sum of input elements
+  // reg signed [31:0] accumulator;
+  // integer i;
+  // reg signed [7:0] element [7:0];
+  //   reg signed [15:0] sum_elements;
+
+
+   // Signal to reset the accumulator at end of vector
+  // wire reset_accum = io_in_tvalid && io_in_tready && io_in_tlast;
+
+
+  // wire [63:0] squared_input_data;
+  // Accumulator output wire
+  wire [31:0] accumulator_sum;
+  reg [31:0] accumulator;
+
+  
+  // squarer square_module (
+  //   .data_in(io_in_tdata),
+  //   .data_out(squared_input_data)
+  // );
+
+  addElements sum_module (
+    .data_in(io_in_tdata),
+    .sum_out(accumulator_sum)
+  );
+
   // Replace this loop back with the actual logic for L2 norm calculation
   // ------------------------------------------------------------------------
   // ------------------------------------------------------------------------
@@ -24,13 +51,18 @@ module L2NormAXIS(
     if (reset) begin
       result_valid <= 1'b0;
       result_data <= 32'h0;
+      accumulator <= 32'h0; // Reset the accumulator
     end else begin
-      if (io_in_tvalid && io_in_tready && io_in_tlast) begin
-        // result_data <= io_in_tdata[31:0];
-        result_data <= 32'h19;
+      if (io_in_tvalid && io_in_tready) begin
+        accumulator  <= accumulator + accumulator_sum;
+      end
 
+      if (io_in_tvalid && io_in_tready && io_in_tlast) begin
+        result_data <= accumulator + accumulator_sum; // Use the accumulator as the result
         result_valid <= 1'b1;
-      end else if (io_out_tready && io_out_tvalid) begin
+        accumulator <= 32'h0; // Reset the accumulator
+      end
+      else if (io_out_tready && io_out_tvalid) begin
         result_valid <= 1'b0; // Clear valid when output is ready
       end
     end
