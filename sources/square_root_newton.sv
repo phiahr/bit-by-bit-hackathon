@@ -43,7 +43,7 @@ reg [31:0] in_val;
         $display("outval init:");
         $display(out);
         
-        if (cntr > 5) begin
+        if (cntr > 11) begin
           $display("S2 - counter > 5");
           s2 <= 1'b0;
           s3 <= 1'b1;
