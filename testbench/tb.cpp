@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
     for (int i = 0; i < 5; ++i) tick(dut);
     dut->reset = 0;
 
-    uint32_t data_in = 0x3f800000;
+    uint32_t data_in = 785;
     std::cout << "Input:" << std::endl;
     print32BitRepresentation(data_in);
 

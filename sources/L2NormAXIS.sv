@@ -55,19 +55,18 @@ module L2NormAXIS(
         // result_data <= io_in_tdata[31:0];
         // result_data <= 32'h19;
         // result_valid <= 1'b1;
+      $display("Main loop receive data");
         START_SQ <= 1'b1;
-        if(DONE_SQ) begin
-        $display("Main loop send data");
-          result_data <= result_buffer;
-          START_SQ <= 1'b0;
-          result_valid <= 1'b1;
-        end else begin
-        $display("Main loop wait");
-        
-        end
-
-
-      end else if (io_out_tready && io_out_tvalid) begin
+      end
+      if(DONE_SQ) begin
+      $display("Main loop send data");
+        result_data <= result_buffer;
+        START_SQ <= 1'b0;
+        result_valid <= 1'b1;
+      end else begin
+      $display("Main loop wait");
+      end
+      if (io_out_tready && io_out_tvalid) begin
         result_valid <= 1'b0; // Clear valid when output is ready
       end
     end

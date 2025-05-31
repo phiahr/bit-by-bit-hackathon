@@ -32,26 +32,35 @@ reg [31:0] in_val;
           s1 <= 1'b0;
           s2 <= 1'b1;
           in_val <= in;
-          out <= (in << 2) | 1'b1;
+          $display("In value:");
+          $display(in);
+          out <= (in >> 1) + 1;
           AVAILABLE <= 1'b0;
         end 
       end
       if (s2) begin
         $display("State 2");
+        $display("outval init:");
+        $display(out);
         
         if (cntr > 5) begin
           $display("S2 - counter > 5");
           s2 <= 1'b0;
           s3 <= 1'b1;
-
+          DONE <= 1'b1;
         end else begin
-          $display("S2 - calcs");
-          out <= (out + (in/out)) >> 2;
+          $display("S2 - calcs result:");
+          out <= (out + (in/out)) >> 1;
+          $display(out);
           cntr <= cntr + 1;
         end
       end
       if (s3) begin
         $display("State 3");
+        $display(START);
+        $display(DONE);
+        $display(AVAILABLE);
+
         if (!START) begin
           $display("S3 - Start = 0");
           $display(START);
