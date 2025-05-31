@@ -20,12 +20,21 @@ module L2NormAXIS(
   // ------------------------------------------------------------------------
   reg [31:0] result_data;
   reg result_valid;
+  wire [3:0] c1_out;
+  counter c1(
+    .clk(clock),
+    .rstn(reset),
+    .out(c1_out)
+  );
   always @(posedge clock) begin
     if (reset) begin
       result_valid <= 1'b0;
       result_data <= 32'h0;
     end else begin
+      
       if (io_in_tvalid && io_in_tready && io_in_tlast) begin
+        // $display("Data in");
+        // $display(io_in_tdata);
         // result_data <= io_in_tdata[31:0];
         result_data <= 32'h19;
 
