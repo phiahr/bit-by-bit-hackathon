@@ -1,10 +1,10 @@
 module addElements (
-  input  [63:0] data_in,
+  input  [127:0] data_in,
   output [31:0] sum_out
 );
 
   integer i;
-  reg signed [7:0] elements [7:0];
+  // reg signed [7:0] elements [7:0];
   reg [15:0] sq_elements [7:0];
   
   reg [31:0] sum;
@@ -12,14 +12,14 @@ module addElements (
   always @(*) begin
     for (i = 0; i < 8; i = i + 1) begin
 
-      elements[i] = data_in[i*8 +: 8]; //* data_in[i*8 +: 8]; // Squaring the input elements
-      // squared_elements[i] = data_in[i*16 +: 16];
+      // elements[i] = data_in[i*8 +: 8]; //* data_in[i*8 +: 8]; // Squaring the input elements
+      sq_elements[i] = data_in[i*16 +: 16];
     end
 
-    for (i = 0; i < 8; i = i + 1) begin
+    // for (i = 0; i < 8; i = i + 1) begin
 
-      sq_elements[i] = elements[i] * elements[i];
-    end
+    //   sq_elements[i] = elements[i] * elements[i];
+    // end
 
     sum = 0;
     for (i = 0; i < 8; i = i + 1) begin

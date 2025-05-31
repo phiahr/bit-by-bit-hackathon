@@ -26,19 +26,19 @@ module L2NormAXIS(
   // wire reset_accum = io_in_tvalid && io_in_tready && io_in_tlast;
 
 
-  // wire [63:0] squared_input_data;
+  wire [127:0] squared_input_data;
   // Accumulator output wire
   wire [31:0] accumulator_sum;
   reg [31:0] accumulator;
 
   
-  // squarer square_module (
-  //   .data_in(io_in_tdata),
-  //   .data_out(squared_input_data)
-  // );
+  squarer square_module (
+    .data_in(io_in_tdata),
+    .data_out(squared_input_data)
+  );
 
   addElements sum_module (
-    .data_in(io_in_tdata),
+    .data_in(squared_input_data),
     .sum_out(accumulator_sum)
   );
 
