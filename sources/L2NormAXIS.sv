@@ -19,26 +19,54 @@ module L2NormAXIS(
   // ------------------------------------------------------------------------
   // ------------------------------------------------------------------------
   reg [31:0] result_data;
+  reg [31:0] result_buffer;
   reg result_valid;
   wire [3:0] c1_out;
   reg computations_done;
-  counter c1(
+  reg START_SQ;
+  wire DONE_SQ;
+  wire AVAILABLE_SQ;
+  // module square_root (  input clk,               
+  //                 input rstn,             
+  //                 input [31:0] in,
+  //                 output reg [31:0] out,
+  //                 input START,
+  //                 output reg DONE,
+  //                 output reg AVAILABLE);   
+  square_root sq1(
     .clk(clock),
     .rstn(reset),
-    .out(c1_out)
+    .in(io_in_tdata[31:0]),
+    .out(result_buffer),
+    .START(START_SQ),
+    .DONE(DONE_SQ),
+    .AVAILABLE(AVAILABLE_SQ)
   );
   always @(posedge clock) begin
     if (reset) begin
       result_valid <= 1'b0;
       result_data <= 32'h0;
+      START_SQ <= 1'b0;
     end else begin
       
       if (io_in_tvalid && io_in_tready && io_in_tlast ) begin
         // $display("Data in");
         // $display(io_in_tdata);
         // result_data <= io_in_tdata[31:0];
-        result_data <= 32'h19;
-        result_valid <= 1'b1;
+        // result_data <= 32'h19;
+        // result_valid <= 1'b1;
+        START_SQ <= 1'b1;
+        if(DONE_SQ) begin
+        $display("Main loop send data");
+          result_data <= result_buffer;
+          START_SQ <= 1'b0;
+          result_valid <= 1'b1;
+        end else begin
+        $display("Main loop wait");
+        
+        end
+
+
       end else if (io_out_tready && io_out_tvalid) begin
         result_valid <= 1'b0; // Clear valid when output is ready
       end
