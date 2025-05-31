@@ -1,7 +1,7 @@
 module square_root_newton (  input clk,               
                   input rstn,             
                   input [31:0] in,
-                  output reg [31:0] out,
+                  output reg [15:0] out,
                   input START,
                   output reg DONE,
                   output reg AVAILABLE);   
@@ -31,7 +31,7 @@ reg [63:0] in_val;
           $display("S1 - started");
           s1 <= 1'b0;
           s2 <= 1'b1;
-          in_val[63:32] <= in;
+          in_val[63:0] <= in;
           $display("In value:");
           $display(in);
           out <= 500;
@@ -44,7 +44,9 @@ reg [63:0] in_val;
         $display(out);
         
         if (cntr > 14) begin
-          $display("S2 - counter > 5");
+          $display("S2 - counter > threshold");
+          $display(out);
+
           s2 <= 1'b0;
           s3 <= 1'b1;
           DONE <= 1'b1;
@@ -58,9 +60,8 @@ reg [63:0] in_val;
       end
       if (s3) begin
         $display("State 3");
-        $display(START);
-        $display(DONE);
-        $display(AVAILABLE);
+          $display(out);
+
 
         if (!START) begin
           $display("S3 - Start = 0");

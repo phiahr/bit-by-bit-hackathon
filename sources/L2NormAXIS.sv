@@ -71,7 +71,7 @@ reg [31:0] result_buffer;
       end
       if(DONE_SQ & START_SQ) begin
       $display("COMPUTE DONE Main loop send data");
-        result_data <= result_buffer;
+        result_data[31:8] <= result_buffer;
         accumulator <= 32'h0;
         START_SQ <= 1'b0;
         result_valid <= 1'b1;
