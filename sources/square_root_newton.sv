@@ -5,13 +5,13 @@ module square_root_newton (  input clk,
                   input START,
                   output reg DONE,
                   output reg AVAILABLE);   
-
+// gives out 8 bit fixed point precision
 
 reg [3:0] cntr;
 reg s1;
 reg s2;
 reg s3;
-reg [31:0] in_val;
+reg [63:0] in_val;
   always @ (posedge clk) begin
     if (rstn) begin
       out <= 0;
@@ -31,10 +31,10 @@ reg [31:0] in_val;
           $display("S1 - started");
           s1 <= 1'b0;
           s2 <= 1'b1;
-          in_val <= in;
+          in_val[63:32] <= in ;
           $display("In value:");
           $display(in);
-          out <= (in >> 1) + 1;
+          out <= (in >> 2) + 1;
           AVAILABLE <= 1'b0;
         end 
       end
@@ -51,7 +51,7 @@ reg [31:0] in_val;
           cntr <=  4'b0;
         end else begin
           $display("S2 - calcs result:");
-          out <= (out + (in/out)) >> 1;
+          out <= (out + (in_val/out)) >> 1;
           $display(out);
           cntr <= cntr + 1;
         end
