@@ -40,11 +40,10 @@ double fixed_to_float(int32_t value, int frac_bits) {
 }
 
 void print32BitRepresentation(uint32_t value) {
-    std::cout << "Value: " << value << std::endl;
-    std::cout << "Decimal: " << std::dec << value << std::endl;
-    std::cout << "Hex: 0x" << std::hex << std::uppercase << value << std::endl;
-    std::cout << "Binary: " << std::bitset<32>(value) << std::endl;
-    std::cout << std::endl;
+    std::cout << "\tValue: " << value << std::endl;
+    std::cout << "\tDecimal: " << std::dec << value << std::endl;
+    std::cout << "\tHex: 0x" << std::hex << std::uppercase << value << std::endl;
+    std::cout << "\tBinary: " << std::bitset<32>(value) << std::endl;
 }
 
 int main(int argc, char** argv) {
@@ -115,8 +114,9 @@ int main(int argc, char** argv) {
             std::cout << "Using fixed-point representation with " << FIXED << " fractional bits." << std::endl;
         #else
             double received = int_to_float(dut->io_out_tdata);
-            print32BitRepresentation(dut->io_out_tdata);
             std::cout << "Using floating-point representation." << std::endl;
+            std::cout << "RESULT:" << std::endl;
+            print32BitRepresentation(dut->io_out_tdata);
 #endif
 
         expected_vec[vec] = expected;
