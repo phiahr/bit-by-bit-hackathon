@@ -66,7 +66,7 @@ check-verilator:
 	fi
 
 
-$(VERILATED_DIR)/V$(TOP_NAME): $(SOURCES) $(TESTBENCH_MAIN) check-verilator
+$(VERILATED_DIR)/V$(TOP_NAME): $(SOURCES) $(TESTBENCH_MAIN) #check-verilator
 	verilator --cc --threads 1 --vpi --no-timing \
 		$(SOURCES) \
 		--exe $(abspath $(TESTBENCH_MAIN)) \
@@ -77,7 +77,8 @@ $(VERILATED_DIR)/V$(TOP_NAME): $(SOURCES) $(TESTBENCH_MAIN) check-verilator
 		-Wno-WIDTHEXPAND \
 		-Wno-WIDTHTRUNC \
 		-Wno-WAITCONST \
-		-Wno-INITIALDLY
+		-Wno-INITIALDLY\
+		-Wno-MULTITOP
 
 run: $(VERILATED_DIR)/V$(TOP_NAME)
 	./$(VERILATED_DIR)/V$(TOP_NAME)
