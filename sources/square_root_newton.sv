@@ -1,17 +1,21 @@
 module square_root_newton (  input clk,               
                   input rstn,             
                   input [31:0] in,
-                  output reg [31:0] out,
+                  output reg [63:0] out,
                   input START,
                   output reg DONE,
                   output reg AVAILABLE);   
 // gives out 16 bit fixed point precision
 
 reg [3:0] cntr;
+reg [3:0] div_cntr;
+
 reg s1;
 reg s2;
+reg s21;
 reg s3;
-reg [63:0] in_val;
+reg [127:0] in_val;
+reg [127:0] div_out;
   always @ (posedge clk) begin
     if (rstn) begin
       out <= 0;
@@ -50,10 +54,30 @@ reg [63:0] in_val;
           DONE <= 1'b1;
           cntr <=  4'b0;
         end else begin
-          $display("S2 - calcs result:");
-          out <= (out + (in_val/out)) >> 1;
+          div_out <= 10;
+          div_cntr <= 0;
+          s2 <= 1'b0;
+          s21 <= 1'b1;
+
+        end
+      end
+      if (s21) begin
+        if (div_cntr > 10) begin
+          
+          
+          s21 <= 1'b0;
+          s2 <= 1'b1;
+          cntr <=  cntr + 1;
+          out <= (out + (in_val*div_out)) >> 1;
+          $display("div > threschold (div, out):");
+          $display(div_out);
           $display(out);
-          cntr <= cntr + 1;
+
+        end else begin
+          div_out <= div_out*(2- (div_out * out));
+          div_cntr <= div_cntr + 1;
+          $display("diving (div):");
+          $display(div_out);
         end
       end
       if (s3) begin
