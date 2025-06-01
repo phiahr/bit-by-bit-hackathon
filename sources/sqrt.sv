@@ -13,24 +13,31 @@ module sqrt (
   reg [31:0] stage16_result;       // Final formatted result
   reg [16:0] stage_valid;          // Valid signals for all stages
 
-  // Generate individual stage functions for each bit
-  function [31:0] sqrt_bit;
+  // Unified bit function - handles both integer and fractional bits uniformly
+  function [31:0] sqrt_unified_bits;
     input [31:0] value;
     input [31:0] partial_root;
-    input [4:0] bit_pos;
+    input [4:0] high_bit;    // highest bit position for this stage
+    input [4:0] num_bits;    // number of bits to process (1 or 2)
     reg [31:0] root;
     reg [31:0] test_root;
+    reg [63:0] test_square;
+    integer i;
     begin
       root = partial_root;
-      test_root = root | (1 << bit_pos);  // Try setting this bit
-      if (test_root * test_root <= value) begin
-        root = test_root;  // Keep this bit if result is still <= value
+      // Process the specified number of bits
+      for (i = 0; i < num_bits; i = i + 1) begin
+        test_root = root | (1 << (high_bit - i));  // Test this bit position
+        test_square = test_root * test_root;
+        if (test_square <= (value << 16)) begin  // Unified scaling for 16.8 format
+          root = test_root;
+        end
       end
-      sqrt_bit = root;
+      sqrt_unified_bits = root;
     end
   endfunction
 
-  // 16-stage ultra-pipeline logic
+  // 16-stage unified pipeline: 24 total bits (16 integer + 8 fractional)
   always @(posedge clock) begin
     if (reset) begin
       // Reset all pipeline stages
@@ -53,101 +60,107 @@ module sqrt (
         stage_valid[0] <= 1'b0;
       end
       
-      // STAGE 1: Bit 15 (MSB)
+      // STAGE 1: Bits 23,22 (integer MSBs)
       stage_value[1] <= stage_value[0];
-      stage_root[0] <= stage_valid[0] ? sqrt_bit(stage_value[0], 32'h0, 5'd15) : 32'h0;
+      stage_root[0] <= stage_valid[0] ? sqrt_unified_bits(stage_value[0], 32'h0, 5'd23, 5'd2) : 32'h0;
       stage_valid[1] <= stage_valid[0];
       
-      // STAGE 2: Bit 14
+      // STAGE 2: Bits 21,20
       stage_value[2] <= stage_value[1];
-      stage_root[1] <= stage_valid[1] ? sqrt_bit(stage_value[1], stage_root[0], 5'd14) : 32'h0;
+      stage_root[1] <= stage_valid[1] ? sqrt_unified_bits(stage_value[1], stage_root[0], 5'd21, 5'd2) : 32'h0;
       stage_valid[2] <= stage_valid[1];
       
-      // STAGE 3: Bit 13
+      // STAGE 3: Bits 19,18
       stage_value[3] <= stage_value[2];
-      stage_root[2] <= stage_valid[2] ? sqrt_bit(stage_value[2], stage_root[1], 5'd13) : 32'h0;
+      stage_root[2] <= stage_valid[2] ? sqrt_unified_bits(stage_value[2], stage_root[1], 5'd19, 5'd2) : 32'h0;
       stage_valid[3] <= stage_valid[2];
       
-      // STAGE 4: Bit 12
+      // STAGE 4: Bits 17,16
       stage_value[4] <= stage_value[3];
-      stage_root[3] <= stage_valid[3] ? sqrt_bit(stage_value[3], stage_root[2], 5'd12) : 32'h0;
+      stage_root[3] <= stage_valid[3] ? sqrt_unified_bits(stage_value[3], stage_root[2], 5'd17, 5'd2) : 32'h0;
       stage_valid[4] <= stage_valid[3];
       
-      // STAGE 5: Bit 11
+      // STAGE 5: Bits 15,14
       stage_value[5] <= stage_value[4];
-      stage_root[4] <= stage_valid[4] ? sqrt_bit(stage_value[4], stage_root[3], 5'd11) : 32'h0;
+      stage_root[4] <= stage_valid[4] ? sqrt_unified_bits(stage_value[4], stage_root[3], 5'd15, 5'd2) : 32'h0;
       stage_valid[5] <= stage_valid[4];
       
-      // STAGE 6: Bit 10
+      // STAGE 6: Bits 13,12
       stage_value[6] <= stage_value[5];
-      stage_root[5] <= stage_valid[5] ? sqrt_bit(stage_value[5], stage_root[4], 5'd10) : 32'h0;
+      stage_root[5] <= stage_valid[5] ? sqrt_unified_bits(stage_value[5], stage_root[4], 5'd13, 5'd2) : 32'h0;
       stage_valid[6] <= stage_valid[5];
       
-      // STAGE 7: Bit 9
+      // STAGE 7: Bits 11,10
       stage_value[7] <= stage_value[6];
-      stage_root[6] <= stage_valid[6] ? sqrt_bit(stage_value[6], stage_root[5], 5'd9) : 32'h0;
+      stage_root[6] <= stage_valid[6] ? sqrt_unified_bits(stage_value[6], stage_root[5], 5'd11, 5'd2) : 32'h0;
       stage_valid[7] <= stage_valid[6];
       
-      // STAGE 8: Bit 8
+      // STAGE 8: Bits 9,8
       stage_value[8] <= stage_value[7];
-      stage_root[7] <= stage_valid[7] ? sqrt_bit(stage_value[7], stage_root[6], 5'd8) : 32'h0;
+      stage_root[7] <= stage_valid[7] ? sqrt_unified_bits(stage_value[7], stage_root[6], 5'd9, 5'd2) : 32'h0;
       stage_valid[8] <= stage_valid[7];
       
-      // STAGE 9: Bit 7
+      // STAGE 9: Bits 7,6
       stage_value[9] <= stage_value[8];
-      stage_root[8] <= stage_valid[8] ? sqrt_bit(stage_value[8], stage_root[7], 5'd7) : 32'h0;
+      stage_root[8] <= stage_valid[8] ? sqrt_unified_bits(stage_value[8], stage_root[7], 5'd7, 5'd2) : 32'h0;
       stage_valid[9] <= stage_valid[8];
       
-      // STAGE 10: Bit 6
+      // STAGE 10: Bits 5,4
       stage_value[10] <= stage_value[9];
-      stage_root[9] <= stage_valid[9] ? sqrt_bit(stage_value[9], stage_root[8], 5'd6) : 32'h0;
+      stage_root[9] <= stage_valid[9] ? sqrt_unified_bits(stage_value[9], stage_root[8], 5'd5, 5'd2) : 32'h0;
       stage_valid[10] <= stage_valid[9];
       
-      // STAGE 11: Bit 5
+      // STAGE 11: Bits 3,2
       stage_value[11] <= stage_value[10];
-      stage_root[10] <= stage_valid[10] ? sqrt_bit(stage_value[10], stage_root[9], 5'd5) : 32'h0;
+      stage_root[10] <= stage_valid[10] ? sqrt_unified_bits(stage_value[10], stage_root[9], 5'd3, 5'd2) : 32'h0;
       stage_valid[11] <= stage_valid[10];
       
-      // STAGE 12: Bit 4
+      // STAGE 12: Bits 1,0
       stage_value[12] <= stage_value[11];
-      stage_root[11] <= stage_valid[11] ? sqrt_bit(stage_value[11], stage_root[10], 5'd4) : 32'h0;
+      stage_root[11] <= stage_valid[11] ? sqrt_unified_bits(stage_value[11], stage_root[10], 5'd1, 5'd2) : 32'h0;
       stage_valid[12] <= stage_valid[11];
       
-      // STAGE 13: Bit 3
+      // Now we have completed the 24-bit computation (bits 23 down to 0)
+      // Stages 13-16 can be used for additional precision or pipelining
+      
+      // STAGE 13: Buffer stage
       stage_value[13] <= stage_value[12];
-      stage_root[12] <= stage_valid[12] ? sqrt_bit(stage_value[12], stage_root[11], 5'd3) : 32'h0;
+      stage_root[12] <= stage_root[11];
       stage_valid[13] <= stage_valid[12];
       
-      // STAGE 14: Bit 2
+      // STAGE 14: Buffer stage
       stage_value[14] <= stage_value[13];
-      stage_root[13] <= stage_valid[13] ? sqrt_bit(stage_value[13], stage_root[12], 5'd2) : 32'h0;
+      stage_root[13] <= stage_root[12];
       stage_valid[14] <= stage_valid[13];
       
-      // STAGE 15: Bit 1
+      // STAGE 15: Buffer stage
       stage_value[15] <= stage_value[14];
-      stage_root[14] <= stage_valid[14] ? sqrt_bit(stage_value[14], stage_root[13], 5'd1) : 32'h0;
+      stage_root[14] <= stage_root[13];
       stage_valid[15] <= stage_valid[14];
       
-      // STAGE 16: Bit 0 (LSB) + Final formatting
+      // STAGE 16: Final formatting
       stage_value[16] <= stage_value[15];
       if (stage_valid[15]) begin
         reg [31:0] final_sqrt;
-        final_sqrt = sqrt_bit(stage_value[15], stage_root[14], 5'd0);
+        final_sqrt = stage_root[14];
         
-        // DEBUG: Print what input we're getting
-        $display("DEBUG sqrt: input = %d, sqrt = %d", stage_value[15], final_sqrt);
-       
+        // Result is in 16.8 format (bits 23:8 = integer, bits 7:0 = fractional)
+        // Use the exact same output format as your original working code
         `ifdef FLOAT
           // Convert to floating point for FLOAT mode (placeholder)
           stage16_result <= final_sqrt << 16;
         `else
           // For fixed point mode, shift by fractional bits
           `ifdef FIXED
-            stage16_result <= final_sqrt << `FIXED;
+            stage16_result <= final_sqrt << (`FIXED - 8);  // Account for our 8 fractional bits
           `else
-            stage16_result <= final_sqrt << 16;  // Default 16 fractional bits
+            stage16_result <= final_sqrt << 8;  // Shift by 8 more to get 16 total fractional bits
           `endif
         `endif
+        
+        // DEBUG: Show both integer and fractional parts
+        $display("DEBUG sqrt: input = %d, sqrt = %d.%d (16.8 fixed point)", 
+                 stage_value[15], final_sqrt >> 8, final_sqrt & 8'hFF);
       end else begin
         stage16_result <= 32'h0;
       end
