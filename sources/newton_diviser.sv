@@ -1,96 +1,71 @@
-module square_root_newton (  input clk,               
+module newton_divisers (  input clk,               
                   input rstn,             
                   input [31:0] in,
                   output reg [31:0] out,
                   input START,
                   output reg DONE,
                   output reg AVAILABLE);   
-// gives out 16 bit fixed point precision
 
 reg [3:0] cntr;
 reg s1;
 reg s2;
 reg s3;
-reg [63:0] in_val;
+reg [31:0] in_val;
 
-
-// module newton_divisers (  input clk,               
-//                   input rstn,             
-//                   input [31:0] in,
-//                   output reg [31:0] out,
-//                   input START,
-//                   output reg DONE,
-//                   output reg AVAILABLE);   
-reg [31:0] result_buffer;
-reg [31:0] div_in_down;
-
-  reg START_SQ;
-  wire DONE_SQ;
-  wire AVAILABLE_SQ;
-  newton_divisers sq1(
-    .clk(clk),
-    .rstn(rstn),
-    .in(accumulator[31:0]),
-    .out(result_buffer),
-    .START(START_SQ),
-    .DONE(DONE_SQ),
-    .AVAILABLE(AVAILABLE_SQ)
-  );
-
-
+  
   always @ (posedge clk) begin
     if (rstn) begin
       out <= 0;
       in_val <= 0;
       DONE <= 1'b0;
       AVAILABLE <= 1'b1;
-      cntr <= 4'b0;
+      cntr <= 5'b0;
       s1 <= 1'b1;
       s2 <= 1'b0;
       s3 <= 1'b0;
     end else begin
       if (s1) begin
-        $display("State 1");
+        $display("DState 1");
         AVAILABLE <= 1'b1;
         DONE <= 1'b0;
         if (START) begin
-          $display("S1 - started");
+          $display("DS1 - started");
           s1 <= 1'b0;
           s2 <= 1'b1;
           in_val[63:32] <= in;
-          $display("In value:");
+          $display("DIn value:");
           $display(in);
           out <= 500;
           AVAILABLE <= 1'b0;
         end 
       end
       if (s2) begin
-        $display("State 2");
-        $display("outval init:");
+        $display("DState 2");
+        $display("Doutval init:");
         $display(out);
         
         if (cntr > 14) begin
-          $display("S2 - counter > 5");
+          $display("DS2 - counter > 5");
           s2 <= 1'b0;
           s3 <= 1'b1;
           DONE <= 1'b1;
           cntr <=  4'b0;
         end else begin
-          $display("S2 - calcs result:");
-          // out <= (out + (in_val/out)) >> 1;
-
+          $display("DS2 - calcs result:");
+        //   X n+1​ =X n​ (2−B⋅X n​ )
+          out <= (out *(2 - in_val*out));
           $display(out);
           cntr <= cntr + 1;
         end
       end
       if (s3) begin
-        $display("State 3");
+        $display("DState 3");
         $display(START);
         $display(DONE);
         $display(AVAILABLE);
 
         if (!START) begin
-          $display("S3 - Start = 0");
+          $display("DS3 - Start = 0");
           $display(START);
           s3 <= 1'b0;
           s1 <= 1'b1;
